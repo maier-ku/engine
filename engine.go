@@ -10,11 +10,26 @@ import (
 	"net/rpc"
 	"time"
 	//"os"
-
-	"uk.ac.bris.cs/gameoflife/gol"
-	"uk.ac.bris.cs/gameoflife/stubs"
 )
 
+type Params struct {
+	Turns       int
+	Threads     int
+	ImageWidth  int
+	ImageHeight int
+}
+
+
+type Board struct {
+	//Message string
+	World [][]byte
+	P     Params
+}
+type BoardResponse struct {
+	//Message  string
+	NewWorld [][]byte
+	NewTurn  int
+}
 /*var (
 	topics  = make(map[string]chan stubs.Board)
 	topicmx sync.RWMutex
@@ -115,7 +130,7 @@ func mod(x, m int) int {
 	return (x + m) % m
 }
 
-func countNeighbours(p gol.Params, x, y int, world [][]byte) int {
+func countNeighbours(p Params, x, y int, world [][]byte) int {
 	neighbours := 0
 	for i := -1; i <= 1; i++ {
 		for j := -1; j <= 1; j++ {
@@ -129,7 +144,7 @@ func countNeighbours(p gol.Params, x, y int, world [][]byte) int {
 	return neighbours
 }
 
-func calculateNextState(p gol.Params, world [][]byte, turn int) [][]byte {
+func calculateNextState(p Params, world [][]byte, turn int) [][]byte {
 	newWorld := make([][]byte, p.ImageHeight)
 	for i := range newWorld {
 		newWorld[i] = make([]byte, p.ImageWidth)
@@ -158,8 +173,8 @@ func calculateNextState(p gol.Params, world [][]byte, turn int) [][]byte {
 
 type Engine struct{}
 
-func (e *Engine) NewBoard(req stubs.Board, res *stubs.BoardResponse) (err error) {
-	var boardRequest *stubs.Board
+func (e *Engine) NewBoard(req Board, res *BoardResponse) (err error) {
+	var boardRequest *Board
 	if boardRequest == nil {
 		err = errors.New("???")
 		return
