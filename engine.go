@@ -86,6 +86,7 @@ func (e *Engine) NewBoard(req Board, res *BoardResponse) (err error) {
 	var boardRequest *Board
 	if boardRequest == nil {
 		err = errors.New("???")
+		log.Print("rpc.Serve: accept:", err.Error())
 		return
 	}
 
