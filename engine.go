@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -9,7 +8,8 @@ import (
 	"net"
 	"net/rpc"
 	"time"
-	//"os"
+	//"uk.ac.bris.cs/gameoflife/gol"
+	//"uk.ac.bris.cs/gameoflife/gol"
 )
 
 type Params struct {
@@ -19,18 +19,16 @@ type Params struct {
 	ImageHeight int
 }
 
-
+//PGM image
 type Board struct {
-	//Message string
 	World [][]byte
+	Turn  int
 	P     Params
 }
 type BoardResponse struct {
-	//Message  string
 	NewWorld [][]byte
 	NewTurn  int
 }
-
 
 const alive = 0xFF
 const dead = 0x00
@@ -80,68 +78,40 @@ func calculateNextState(p Params, world [][]byte, turn int) [][]byte {
 	return newWorld
 }
 
-type Engine struct{}
+type Engine struct {
+}
 
 func (e *Engine) NewBoard(req Board, res *BoardResponse) (err error) {
-	var boardRequest *Board
-	if boardRequest == nil {
-		err = errors.New("???")
-		log.Print("rpc.Serve: accept:", err.Error())
-		return
-	}
+	fmt.Println("-----> Engine req:", req.P)
 
-	//fmt.Println("engine:" + req.Message)
-
-	newWorld := req.World
+	var reply BoardResponse
 	turn := 0
+	reply.NewWorld = req.World
 	for ; turn < req.P.Turns; turn++ {
-		newWorld = calculateNextState(req.P, newWorld, turn)
+		reply.NewWorld = calculateNextState(req.P, req.World, turn)
+		reply.NewTurn = turn + 1
 	}
-	res.NewWorld = newWorld
-	res.NewTurn = turn
-	//*res = reply
-	//res.NewTurn = 100
+	fmt.Println("-----> Engine req.P:", req.P)
+	fmt.Println("-----> Engine Turn:", turn)
+
+	*res = reply
 	return
-	
 }
 
 func main() {
-	//var api = new(Engine)
-	rpc.Register(&Engine{})
-
-	//tcpAddr, err := net.ResolveTCPAddr("tcp", ":8033")
-	//checkError(err)
-
+	var api = new(Engine)
+	err := rpc.Register(api)
+	if err != nil {
+		log.Fatal("err API", err)
+	}
 	pAddr := flag.String("port", "8033", "Port to listen on")
 	//flag.StringVar(&nextAddr, "next", "localhost:8040", "IP:Port string for the next member")
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
-
-	/*rr := rpc.Register(api)
-	if err != nil {
-		log.Fatal("err API", err)
-	}*/
-	
-	listener, err := net.Listen("tcp", ":"+*pAddr)
-	if err != nil {
-		log.Fatal("listen error:", err)
-	}
+	//rpc.Register(&Engine{})
+	listener, _ := net.Listen("tcp", ":"+*pAddr)
 
 	fmt.Println("Engine Start")
 	defer listener.Close()
-	
-	//rpc.Accept(listener)
-	_, err = listener.Accept()
-		if err != nil {
-			log.Print("rpc.Serve: accept:", err.Error())
-			return
-		}
+	rpc.Accept(listener)
 }
-
-/*func checkError(err error) {
-    if err != nil {
-        fmt.Println("Fatal error ", err.Error())
-        os.Exit(1)
-    }
-}*/
-
